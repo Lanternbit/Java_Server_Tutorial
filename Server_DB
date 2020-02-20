@@ -1,0 +1,141 @@
+package Socket_Network;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.util.ArrayList;
+
+public class Server_DB {
+	private String driver = "org.mariadb.jdbc.Driver";
+	private String url = "jdbc:mariadb://127.0.0.1:3306/lab_data";
+	private String id = "root";
+	private String pw = "q1w2e3r4";
+	private static String table[];
+	private static String box = null;
+	private static String col = null;
+	private static String sum = "";
+	Connection con;
+	PreparedStatement pre;
+	ResultSet res;
+
+	public Server_DB() {
+		try {
+			Class.forName(driver);
+			con = DriverManager.getConnection(url, id, pw);
+		} catch (ClassNotFoundException e) {
+			System.out.println("[로드 오류]\n" + e.getStackTrace());
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void closeDatabase() {
+		try {
+			if (con != null)
+				con.close();
+			if (pre != null)
+				pre.close();
+			if (res != null)
+				res.close();
+		} catch (SQLException e) {
+			System.out.println("[닫기 오류]\n" + e.getStackTrace());
+		}
+	}
+
+	public int productInsert(String STUDENT_ID, String NAME, String DEPT, int GRADE, String GRADUATE, String EXTRA) {
+		int resultValue = 0;
+		try {
+			String sql = "INSERT INTO ngn VALUES (?, ?, ?, ?, ?, ?)";
+			con = DriverManager.getConnection(url, id, pw);
+
+			pre = con.prepareStatement(sql);
+			pre.setString(1, STUDENT_ID);
+			pre.setString(2, NAME);
+			pre.setString(3, DEPT);
+			pre.setInt(4, GRADE);
+			pre.setString(5, GRADUATE);
+			pre.setString(6, EXTRA);
+
+			resultValue = pre.executeUpdate();
+
+		} catch (SQLException e) {
+			System.out.println("[쿼리 오류]\n" + e.getStackTrace());
+		} finally {
+			closeDatabase();
+		}
+		return resultValue;
+	}
+
+	public int productUpdate(String DEPT, int GRADE, String GRADUATE, String EXTRA, String NAME) {
+		int resultValue = 0;
+		try {
+			String sql = "UPDATE ngn SET DEPT=?, GRADE=?, GRADUATE=?, EXTRA=? WHERE NAME=?";
+			con = DriverManager.getConnection(url, id, pw);
+
+			pre = con.prepareStatement(sql);
+			pre.setString(1, DEPT);
+			pre.setInt(2, GRADE);
+			pre.setString(3, GRADUATE);
+			pre.setString(4, EXTRA);
+			pre.setString(5, NAME);
+
+			resultValue = pre.executeUpdate();
+		} catch (Exception e) {
+			System.out.println("[쿼리 오류]\n" + e.getStackTrace());
+		} finally {
+			closeDatabase();
+		}
+		return resultValue;
+	}
+
+	public int productDelete(String NAME) {
+		int resultValue = 0;
+		try {
+			String sql = "DELETE FROM ngn WHERE NAME=?";
+			con = DriverManager.getConnection(url, id, pw);
+			pre = con.prepareStatement(sql);
+			pre.setString(1, NAME);
+
+			resultValue = pre.executeUpdate();
+		} catch (SQLException e) {
+			System.out.println("[쿼리 오류]\n" + e.getStackTrace());
+		} finally {
+			closeDatabase();
+		}
+		return resultValue;
+	}
+
+	public String productSelectAll() {
+		try {
+			String[] table = new String[300];
+			int i = 0;
+			String sql = "SELECT * FROM ngn";
+			con = DriverManager.getConnection(url, id, pw);
+
+			pre = con.prepareStatement(sql);
+			res = pre.executeQuery();
+			ResultSetMetaData resultSetMetaData = res.getMetaData();
+			col = resultSetMetaData.getColumnName(1) + "\t" + resultSetMetaData.getColumnName(2) + "\t"
+					+ resultSetMetaData.getColumnName(3) + "\t" + resultSetMetaData.getColumnName(4) + "\t"
+					+ resultSetMetaData.getColumnName(5) + "\t" + resultSetMetaData.getColumnName(6);
+			while (res.next()) {
+				table[i] = res.getString("STUDENT_ID") + "\t" + res.getString("NAME") + "\t" + res.getString("DEPT")
+						+ "\t" + res.getInt("GRADE") + "\t" + res.getString("GRADUATE") + "\t" + res.getString("EXTRA");
+				sum += table[i] + "\n";
+			}
+			box = col + "\n" + sum;
+			sum = null;
+		} catch (SQLException e) {
+			System.out.println("[쿼리 요류]\n" + e.getStackTrace());
+		} finally {
+			closeDatabase();
+		}
+		return (box);
+	}
+
+	public static void main(String[] args) {
+	}
+}
