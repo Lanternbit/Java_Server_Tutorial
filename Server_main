@@ -1,0 +1,42 @@
+package Socket_Network;
+
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+public class Server {
+
+	private ServerSocket ss;
+	private Socket socket;
+
+	static final int PORT = 10002;
+
+	private void serverSetting() {
+		ss = null;
+		socket = null;
+
+		try {
+			ss = new ServerSocket(PORT);
+			System.out.println("서버 생성");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		while(true) {
+			try {
+				socket = ss.accept();
+				System.out.println("스레드 생성");
+				new Server_thread(socket).start();
+			} catch (IOException e) {
+				System.out.println("I/O error :" + e);
+			}
+		}
+	}
+
+	public Server() {
+		serverSetting();
+	}
+
+	public static void main(String[] args) {
+		new Server();
+	}
+}
