@@ -1,0 +1,71 @@
+package Socket_Network;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.Scanner;
+
+public class Server_thread extends Thread {
+	private Socket socket;
+	private Scanner sc;
+	private Server_DB db;
+
+	public Server_thread(Socket clientSocket) {
+		this.socket = clientSocket;
+	}
+
+	public void run() {
+		InputStream inp = null;
+		DataInputStream din = null;
+		DataOutputStream dout = null;
+		try {
+			inp = socket.getInputStream();
+			sc = new Scanner(inp);
+			din = new DataInputStream(socket.getInputStream());
+			dout = new DataOutputStream(socket.getOutputStream());
+		} catch (Exception e) {
+			return;
+		}
+			try {
+				if ((sc == null) && sc.equals("QUIT")) {
+					socket.close();
+					return;
+				} else {
+					dout = new DataOutputStream(socket.getOutputStream());
+					db = new Server_DB();
+					String ngntable = db.productSelectAll();
+					String recvData = din.readUTF();
+					System.out.println("Client : " + recvData);
+					String[] Data = recvData.split(",", 7);
+					switch (Data[0]) {
+					case "1":
+						db.productInsert(Data[1], Data[2], Data[3], Integer.parseInt(Data[4]), Data[5], Data[6]);
+						break;
+					case "2":
+						db.productUpdate(Data[2], Integer.parseInt(Data[3]), Data[4], Data[5], Data[1]);
+						break;
+					case "3":
+						db.productDelete(Data[1]);
+						break;
+					case "4":
+						db.productSelectAll();
+						dout.writeUTF(ngntable);
+						break;
+					}
+
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				return;
+			} finally {
+				try {
+					socket.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+	}
+}
